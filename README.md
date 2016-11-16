@@ -7,7 +7,7 @@ There's also an html element that points to this but is not displayed by default
 
 I do not know the source of the original, I found it a couple years ago and have had it saved on my hard drive ever since. 
 
-I DO NOT take credit fo the original image or concept. All I've done is re implemented it using javascript and canvas. Not infringment intended and I will gladly credit the original author should it ever become apparent. 
+I DO NOT take credit fo the original image or concept. All I've done is re-implemented it using javascript and canvas. No infringment intended and I will gladly credit the original author should they ever become apparent. 
 
 I saw it and wanted to make my own version so that I could use it as a background for an udpdated portfolio website.
 I used Easel.js because I wanted a framework to take care of timing the animation loop for me, but the actual rendering is done with pure js/canvas. 
