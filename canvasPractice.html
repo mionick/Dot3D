@@ -49,6 +49,14 @@
     		return Math.random() * (max - min) + min;
 		}
 
+		function distance(t) {
+			/*
+			Will take a t |  0 < t < 1 and return a perfent representing how far along the dot should be.
+			*/
+
+			return 0.5*(-Math.cos(t * Math.PI) + 1);
+
+		}
 		
 		var c=document.getElementById('homeCanvas');
 		var ctx=c.getContext('2d');	
