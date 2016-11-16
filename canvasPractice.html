@@ -68,13 +68,9 @@
 		var text;
 		var g;
 		var ball;
-		var maxi = 12, maxj = 12, maxk = 10;
+		var maxi = 12, maxj = 12, maxk = 12;
 
-		var period = 3000; //milliseconds for 1 movement.
-
-		var maxVisionDepth = maxk * zSpace;
-		var maxXdistance = maxVisionDepth * 100;
-		var maxYdistance = maxVisionDepth * 100;
+		var period = 1500; //milliseconds for 1 movement.
 
 		var n = 2.0;
 		var canvasWidth = 1000;
@@ -83,6 +79,10 @@
 		var ySpace = canvasHeight / (n-1);
 		var zSpace = 5;
 
+		var maxVisionDepth = maxk * zSpace;
+		var maxXdistance = maxi * xSpace;
+		var maxYdistance = maxj * ySpace;
+
 		var xLength = xSpace*(maxi);
 		var yLength = ySpace*(maxj);
 		var startx = -xSpace*(maxi-n)/2;
@@ -90,7 +90,7 @@
 		var endx = xLength + startx;
 		var endy = yLength + starty;
 
-		function Dot(xi, yi, zi, state, direction, directionz) {
+		function Dot(xi, yi, zi, state, directionx, directiony, directionz) {
 
 			this.self = this;
 			this.x = xi;
@@ -104,16 +104,17 @@
 			this.yf = yi;
 			this.zf = zi;
 
-			this.direction = direction;
+			this.directionx = directionx;
+			this.directiony = directiony;
 			this.directionz = directionz;
 
 
 
 			if (this.currentState == 0) {
 				//Next modify the x coord
-				this.xf = this.xi + xSpace* direction;
+				this.xf = this.xi + xSpace* directionx;
 			} else if (this.currentState == 1) {
-				this.yf = this.yi + ySpace* direction;
+				this.yf = this.yi + ySpace* directiony;
 			} else if (this.currentState == 2) {
 				this.zf = this.zi + zSpace* directionz;
 			}
@@ -128,6 +129,7 @@
 					this.x = this.xf;
 					this.y = this.yf;
 					this.z = this.zf;
+
 					this.xi = this.xf;
 					this.yi = this.yf;
 					this.zi = this.zf;
@@ -135,9 +137,9 @@
 
 					if (this.currentState == 0) {
 						//Next modify the x coord
-						this.xf = this.xi + xSpace* direction;
+						this.xf = this.xi + xSpace* directionx;
 					} else if (this.currentState == 1) {
-						this.yf = this.yi + ySpace* direction;
+						this.yf = this.yi + ySpace* directiony;
 					} else if (this.currentState == 2) {
 						this.zf = this.zi + zSpace* directionz;
 					}
@@ -163,6 +165,25 @@
 					this.zf += maxVisionDepth;	
 				}
 				
+				if (this.y >= maxYdistance/2) {
+					this.y -= maxYdistance;
+					this.yi -= maxYdistance;
+					this.yf -= maxYdistance;
+				} else if (this.y < -maxYdistance/2) {
+					this.y += maxYdistance;
+					this.yi += maxYdistance;
+					this.yf += maxYdistance;
+				}
+
+				if (this.x >= maxXdistance/2) {
+					this.x -= maxXdistance;
+					this.xi -= maxXdistance;
+					this.xf -= maxXdistance;
+				} else if (this.x < -maxXdistance/2) {
+					this.x += maxXdistance;
+					this.xi += maxXdistance;
+					this.xf += maxXdistance;
+				}
 
 			}
 		}
@@ -180,7 +201,7 @@
 			for (k = 0; k < maxk; k++) {
 				for (i = 0; i < maxi; i++) {
 					for (j = 0; j < maxj; j++) {
-						dots.push(new Dot(i*xSpace + startx, j*ySpace + starty, k*zSpace + 1, 0, ((j+k) % 2) * 2 - 1, ((i+k) % 2) * 2 - 1));
+						dots.push(new Dot(i*xSpace + startx, j*ySpace + starty, k*zSpace + 1, 0, ((j+k) % 2) * 2 - 1, ((i+k) % 2) * 2 - 1, ((i+j) % 2) * 2 - 1));
 					}
 				}
 			}
