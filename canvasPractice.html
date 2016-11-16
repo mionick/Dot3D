@@ -1,3 +1,22 @@
+
+<!--  Dots  -->
+<!--  Nicholas Mio  -->
+<!--  November 16, 2016  -->
+
+<!--  This is a mini project that was inspired by a .gif that can be found at the relative link here: ./original.gif
+			There's also an html element that points to this but is not displayed by default.
+
+			I do not know the source of the original, I found it a couple years ago and have had it saved on my hard drive ever since. 
+
+			I DO NOT take credit fo the original image or concept. All I've done is re implemented it using javascript and canvas. Not infringment intended and I will gladly credit the original author should it ever become apparent. 
+
+		 	I saw it and wanted to make my own version so that I could use it as a background for an udpdated portfolio website.
+		  I used Easel.js because I wanted a framework to take care of timing the animation loop for me, but the actual rendering is done with pure js/canvas. 
+
+			I tried to make the code as general as possible throughout development so that changing small things like the nummber of dots or the speed was just a parameter change instead of rewriting a block of code. 
+
+			-->
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -32,6 +51,8 @@
 
 	</style>
 
+	<noscript><img src="./original.gif"></noscript>
+
 	<div id="canvasWrapper">
 	<canvas id="homeCanvas" width="1000;" height="1000;">
 	</canvas>
@@ -42,16 +63,26 @@
 	Need to define this in the most general sense. 
 	Just define number of dots in each direction required, do the math to figure out how to space it and where to put them.
 	*/
-		function getRandomInt(min, max) {
-    		return Math.floor(Math.random() * (max - min + 1)) + min;
-		}
-		function getRandomFloat(min, max) {
-    		return Math.random() * (max - min) + min;
-		}
 
 		function distance(t) {
 			/*
-			Will take a t |  0 < t < 1 and return a perfent representing how far along the dot should be.
+			Will take a t |  0 < t < 1 and return a percent representing how far along the dot should be.
+
+			My previous attempts used velocity, but I found that the dots became out of synch rapidly. I thought this was liely due to rapidly accruing rounding errors, and it was going to cause problems when I tried to vary the speed anyways, so I changed my tactic.
+
+			Now the positions of the dots are set accordign to this function. 
+
+			The only guarantee this function has to make is that:
+			distance(0) = 0;
+			distance(1) = 1;
+
+			0 < distance(t) < 1 for all 0 < t < 1;
+
+			This allows us to vary the "Speed" at which the dots approach the end points.
+			I've used a cosine here so the the fasted speed happens when the dot is in the centre of it's initial and final position.
+
+			Was also considering using t^2 or another polynomial, but this is the smoothest approach. 
+
 			*/
 
 			return 0.5*(-Math.cos(t * Math.PI) + 1);
@@ -61,57 +92,66 @@
 		var c=document.getElementById('homeCanvas');
 		var ctx=c.getContext('2d');	
 
-		var globalID;
 		//an array of points in space. 
 		var dots = [];
-		var stage;
-		var text;
-		var g;
-		var ball;
-		var maxi = 12, maxj = 12, maxk = 11;
+		var stage; //easel.js variable wrapping around the canvas.
+		var text; //framerate.
+		var g; //graphics
+		var maxi = 12, maxj = 12, maxk = 11; //number of dots in each direction, x, y, z.
 
-		var period = 1500; //milliseconds for 1 movement.
+		var period = 1200; // number of milliseconds for 1 movement.
 
-		var n = 2.0;
-		var canvasWidth = 1000;
+		var n = 2.0; //number of dots to fit on the screen at once (in the forntmost x-y plane)
+		var canvasWidth = 1000; 
 		var canvasHeight = 1000;
-		var xSpace = canvasWidth / (n-1);
-		var ySpace = canvasHeight / (n-1);
-		var zSpace = 5;
+		var xSpace = canvasWidth / (n-1); //Space between dots in the x dimenstion
+		var ySpace = canvasHeight / (n-1); //Space between dots in the y dimenstion
+		var zSpace = 5; //Space between dots in the z dimenstion, hardcoded to make it look the way I wanted and beause there is no limit to the viewport size in the z dimension, so there's no math we can do that is analagous to x and y.
 
-		var maxVisionDepth = maxk * zSpace;
+		//These are used to calculate when to make a dot "Wrap around" to the other side.
+		var maxVisionDepth = maxk * zSpace; 
 		var maxXdistance = maxi * xSpace;
 		var maxYdistance = maxj * ySpace;
 
-		var xLength = xSpace*(maxi);
-		var yLength = ySpace*(maxj);
+		//Used to offset the dots so that there are an even number on the left and right side of the canvas.
 		var startx = -xSpace*(maxi-n)/2;
 		var starty = -ySpace*(maxj-n)/2;
-		var endx = xLength + startx;
-		var endy = yLength + starty;
 
+		//Used to figure out when a dot should start fading into the distance.
 		var transparencyNum = 2;
 		var transparencyStart = (maxk - transparencyNum)*zSpace;
 
+		/*
+		The Dot prototype.
+	
+		Has an initial position and a final position. to track where it is and where it's going.
+		Originally it called the distance function to see how far along it should be between the two points at any given time, though now it is passed in for performance benefit.
+
+		Also has a "state" telling it which direction it is moving in at any given time.
+
+
+		*/ 
 		function Dot(xi, yi, zi, state, directionx, directiony, directionz) {
 
-			this.self = this;
+			//Actual current position
 			this.x = xi;
 			this.y = yi;
 			this.z = zi;
+
+			//Initial position
 			this.xi = xi;
 			this.yi = yi;
 			this.zi = zi;
 
+			//final position
 			this.xf = xi;
 			this.yf = yi;
 			this.zf = zi;
 
+			//The direction (+ve or -ve) that the dot should travel on when it has to move along that axis.
 			this.directionx = directionx;
 			this.directiony = directiony;
 			this.directionz = directionz;
-
-
 
 			if (this.currentState == 0) {
 				//Next modify the x coord
@@ -122,12 +162,14 @@
 				this.zf = this.zi + zSpace* directionz;
 			}
 			
+			//The last full period that we were updated on. Tell us which state we are in.
 			this.lastTime = 0;
 
 			this.currentState = state;
 
 			this.update = function(time, position) {
 
+				//If we are in the next period, then we need to "reach" our final position, and update to get our new final position
 				if (time - this.lastTime > period) {
 					this.currentState ++;
 					this.currentState = this.currentState % 3;
@@ -153,8 +195,7 @@
 				}
 
 
-
-
+				//Only update along the axis that we are currently moving on.
 				if (this.currentState == 0) {
 					//Next modify the x coord
 					this.x = this.xi + (this.xf - this.xi)*position;
@@ -197,15 +238,17 @@
 		}
 
 
-
+		//The camera is the observer.
 		var camera = new Dot(500, 500, -5);
 
+		//Initial setup is run once once the body has loaded.
 		function Setup() {
 			c.style.backgroundColor = "#f5f5f5";
 
 			stage = new createjs.Stage("homeCanvas");
 
 
+			//Create the dots and fill the array.
 			for (k = 0; k < maxk; k++) {
 				for (i = 0; i < maxi; i++) {
 					for (j = 0; j < maxj; j++) {
@@ -219,56 +262,52 @@
 			
 			stage.addChild(text);
 
-
+			//Easel.js has several timing modes, this one defaults to tryign to use requestAnimationFrame() and will fallback to using setInterval() or setTimeout().
 			createjs.Ticker.timingMode = createjs.Ticker.RAF;
 			createjs.Ticker.addEventListener("tick", Animate);
 		}
 
+		//Compare was originally use when I was sorting the dots on every frame to solve a drawing out of order issue.
+		//They were essentially to be sorted on their z-index.
 		function compare(a, b) {
 			return b.z - a.z;
 		}
 
+		//Get's called once per frame by Easel.js
 		function Animate(event) {
 			/*Update objects here.*/
-			//circle.x = circle.x + 100*event.delta/1000;
-			//if (circle.x > stage.canvas.width) { circle.x = 0; }
 			text.text = createjs.Ticker.getMeasuredFPS().toFixed(2) ;
 			stage.update();
-
-			/*
-			TODO:
-			three steps to animation
-			keep dots sorted on z-index at each step?
-
-			insert new ones into the correct side of the array to make sure they are displayed properly
-
-			look into the tween library
-
-			*/
 
 			time = createjs.Ticker.getTime();
 			delta = time %period;
 			delta = delta / period;
+
 			for (var i = 0; i < maxi; i++) {
 				for (var j = 0; j < maxj; j++) {
 					for (var k = 0; k < maxk; k++) {
 						//Update
 						curDot = dots[k + j*maxk + i*maxj*maxk];
-
 						curDot.update(time, distance(delta));
 
 					}
 				}
 			}
 
+			//Not necessary to sort since I changed the color of the dots to be all black. 
 			//dots.sort(compare);
 
+			//Render
+			/*
+			Dots are rendered with basic though sightly wrong 3d math.
+			Farther dots have a smaller radius, and eventually become transparent.
+			The dots are put into perspective here as well.
+			*/
 			for (var i = 0; i < maxi; i++) {
 				for (var j = 0; j < maxj; j++) {
 					for (var k = 0; k < maxk; k++) {
 						curDot = dots[k + j*maxk + i*maxj*maxk];
 
-						//Render
 						ctx.beginPath();
 						ctx.arc(
 							(curDot.x - camera.x) * -camera.z/curDot.z + camera.x,
@@ -290,21 +329,6 @@
 
 		}
 
-		
-
-		/*
-		$("#start").on("click", function() {
-		  globalID = requestAnimationFrame(Animate);
-		});
-
-		$("#stop").on("click", function() {
-		  cancelAnimationFrame(globalID);
-		});
-		*/
-
-
-
-	-->
 	</script>
  
 </body>
