@@ -280,7 +280,7 @@
 			stage.update();
 
 			time = createjs.Ticker.getTime();
-			delta = time %period;
+			delta = time % period;
 			delta = delta / period;
 
 			for (var i = 0; i < maxi; i++) {
@@ -309,6 +309,7 @@
 						curDot = dots[k + j*maxk + i*maxj*maxk];
 
 						ctx.beginPath();
+						
 						ctx.arc(
 							(curDot.x - camera.x) * -camera.z/curDot.z + camera.x,
 							(curDot.y - camera.y) * -camera.z/curDot.z + camera.y,
@@ -316,11 +317,13 @@
 							 23 * 	(Math.abs(-camera.z/(curDot.z))),
 							 0,
 							 2*Math.PI);
+
 						if (curDot.z > transparencyStart) {
 							ctx.fillStyle = "rgba(0,0,0," + (1 - ((curDot.z - transparencyStart)*1.0 / (zSpace)*transparencyNum)  )+ ")"
 						} else {
 							ctx.fillStyle = 'black';	
 						}
+      			
       			ctx.fill();
 						//ctx.stroke();
 					}
