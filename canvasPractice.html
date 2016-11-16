@@ -69,12 +69,13 @@
 		var g;
 		var ball;
 		var maxi = 12, maxj = 12, maxk = 10;
-		var distance = 5.0;
 
-		var maxVisionDepth = 50;
-		var xSpeed = 0.4;
-		var ySpeed = 0.4;
-		var zSpeed = 0.002;
+		var period = 3000; //milliseconds for 1 movement.
+
+		var maxVisionDepth = maxk * zSpace;
+		var maxXdistance = maxVisionDepth * 100;
+		var maxYdistance = maxVisionDepth * 100;
+
 		var n = 2.0;
 		var canvasWidth = 1000;
 		var canvasHeight = 1000;
@@ -89,113 +90,86 @@
 		var endx = xLength + startx;
 		var endy = yLength + starty;
 
-		function Dot(x, y, z) {
-			this.x = x;
-			this.y = y;
-			this.z = z;
-			this.vx = 0;
-			this.vy = 0;
-			this.vz = 0;
-
-
-			this.update = function(delta) {
-
-				this.distance += vx*delta;
-				this.distance += vy*delta;
-				this.distance += vz*delta;
-
-				if (Math.abs(distance) >= xSpace ) {
-					//Change direction
-					this.vy = ySpeed * Math.sign(vx);
-					this.vx = 0;
-					this.distance = 0;
-				} else if (vy !== 0 && Math.abs(distance) >= ySpace ) {
-					//Change direction
-					vz = zSpeed * Math.sign(vy);
-					this.vy = 0;
-					this.distance = 0;
-				} else if (vz !== 0 && Math.abs(distance) >= zSpace ) {
-					//Change direction
-					this.vx = xSpeed * Math.sign(vz);
-					this.vz = 0;
-					this.distance = 0;
-				} 
-
-				if (this.z > maxVisionDepth) {
-					this.z = vz*delta;
-					this.x = vx*delta;
-					this.y = vy*delta;
-				} else {
-					this.z += vz*delta;
-					this.x += vx*delta;
-					this.y += vy*delta;
-				}
-			}
-		}
-
-		function Dot(x, y, z, vx, vy, vz) {
+		function Dot(xi, yi, zi, state, direction, directionz) {
 
 			this.self = this;
-			this.x = x;
-			this.y = y;
-			this.z = z;
-			this.vx = vx;
-			this.vy = vy;
-			this.vz = vz;
-			this.distance = 0;
+			this.x = xi;
+			this.y = yi;
+			this.z = zi;
+			this.xi = xi;
+			this.yi = yi;
+			this.zi = zi;
+
+			this.xf = xi;
+			this.yf = yi;
+			this.zf = zi;
+
+			this.direction = direction;
+			this.directionz = directionz;
 
 
-			this.update = function(delta) {
 
-				this.distance += this.vx*delta;
-				this.distance += this.vy*delta;
-				this.distance += this.vz*delta;
+			if (this.currentState == 0) {
+				//Next modify the x coord
+				this.xf = this.xi + xSpace* direction;
+			} else if (this.currentState == 1) {
+				this.yf = this.yi + ySpace* direction;
+			} else if (this.currentState == 2) {
+				this.zf = this.zi + zSpace* directionz;
+			}
+			
+			this.lastTime = 0;
 
-				if (this.vx !== 0 && Math.abs(this.distance) >= xSpace) {
-					//Change direction
-					this.vy = ySpeed * Math.sign(this.vx);
-					this.vx = 0;
-					this.distance = 0;
-				} else if (this.vy !== 0 && Math.abs(this.distance) >= ySpace ) {
-					//Change direction
-					this.vz = zSpeed * Math.sign(this.vy);
-					this.vy = 0;
-					this.distance = 0;
-				} else if (this.vz !== 0 && Math.abs(this.distance) >= zSpace ) {
-					//Change direction
-					this.vx = xSpeed * Math.sign(this.vz);
-					this.vz = 0;
-					this.distance = 0;
-				} 
+			this.currentState = state;
 
-				this.x += this.vx*delta;
-				this.y += this.vy*delta;
-				this.z += this.vz*delta;
+			this.update = function(time) {
 
-				if (this.x < startx) {
-					this.x += xLength;
-				} else if (this.x > endx) {
-					this.x -= xLength;
+				if (time - this.lastTime > period) {
+					this.x = this.xf;
+					this.y = this.yf;
+					this.z = this.zf;
+					this.xi = this.xf;
+					this.yi = this.yf;
+					this.zi = this.zf;
+					this.lastTime = time - time % period;
+
+					if (this.currentState == 0) {
+						//Next modify the x coord
+						this.xf = this.xi + xSpace* direction;
+					} else if (this.currentState == 1) {
+						this.yf = this.yi + ySpace* direction;
+					} else if (this.currentState == 2) {
+						this.zf = this.zi + zSpace* directionz;
+					}
+
+					this.currentState ++;
+					this.currentState = this.currentState % 3;
 				}
 
-				if (this.y < starty) {
-					this.y += yLength;
-				} else if (this.y > endy) {
-					this.y -= yLength;
-				}
+				delta = time %period;
+				delta = delta / period;
+				this.x = this.xi + (this.xf - this.xi)*distance(delta);
+				this.y = this.yi + (this.yf - this.yi)*distance(delta);
+				this.z = this.zi + (this.zf - this.zi)*distance(delta);
 
-				if (this.z < 0) {
-					this.z += maxVisionDepth;
-				} else if (this.z > maxVisionDepth) {
+				//Check if it is within visible range
+				if (this.z >= maxVisionDepth) {
 					this.z -= maxVisionDepth;
+					this.zi -= maxVisionDepth;
+					this.zf -= maxVisionDepth;
+				} else if (this.z < 0) {
+					this.z += maxVisionDepth;
+					this.zi += maxVisionDepth;
+					this.zf += maxVisionDepth;	
 				}
+				
 
 			}
 		}
 
 
 
-		var camera = new Dot(500, 500, 0);
+		var camera = new Dot(500, 500, -5);
 
 		function Setup() {
 			c.style.backgroundColor = "#EEE";
@@ -206,7 +180,7 @@
 			for (k = 0; k < maxk; k++) {
 				for (i = 0; i < maxi; i++) {
 					for (j = 0; j < maxj; j++) {
-						dots.push(new Dot(i*xSpace + startx, j*ySpace + starty, k*zSpace + 1, xSpeed*(((j+k) % 2) * 2 - 1), 0, 0));
+						dots.push(new Dot(i*xSpace + startx, j*ySpace + starty, k*zSpace + 1, 0, ((j+k) % 2) * 2 - 1, ((i+k) % 2) * 2 - 1));
 					}
 				}
 			}
@@ -229,7 +203,7 @@
 			/*Update objects here.*/
 			//circle.x = circle.x + 100*event.delta/1000;
 			//if (circle.x > stage.canvas.width) { circle.x = 0; }
-			text.text = createjs.Ticker.getMeasuredFPS().toFixed(2) + " ---- " + Math.abs(dots[100].distance).toFixed(0) + " - " + dots[100].vx+ " - " + dots[100].vy+ " - " + dots[100].vz + " ---- " + dots[100].x.toFixed(0);
+			text.text = createjs.Ticker.getMeasuredFPS().toFixed(2) ;
 			stage.update();
 
 			/*
@@ -243,13 +217,13 @@
 
 			*/
 
+			time = createjs.Ticker.getTime();
 			for (var i = 0; i < maxi; i++) {
 				for (var j = 0; j < maxj; j++) {
 					for (var k = 0; k < maxk; k++) {
 						//Update
-
 						curDot = dots[k + j*maxk + i*maxj*maxk];
-						curDot.update(event.delta);
+						curDot.update(time);
 
 					}
 				}
@@ -265,10 +239,10 @@
 						//Render
 						ctx.beginPath();
 						ctx.arc(
-							(curDot.x - camera.x) * 1*distance/curDot.z + camera.x,
-							(curDot.y - camera.y) * 1*distance/curDot.z + camera.y,
-							 /*45 * Math.min(1, (distance/curDot.z)*(distance/curDot.z)),*/
-							 23 * 	(Math.abs(distance)/curDot.z),
+							(curDot.x - camera.x) * -camera.z/curDot.z + camera.x,
+							(curDot.y - camera.y) * -camera.z/curDot.z + camera.y,
+							 /*45 * Math.min(1, (-camera.z/curDot.z)*(distance/curDot.z)),*/
+							 23 * 	(Math.abs(-camera.z/curDot.z)),
 							 0,
 							 2*Math.PI);
 						ctx.fillStyle = 'black';
