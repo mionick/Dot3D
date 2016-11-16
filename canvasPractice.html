@@ -68,7 +68,7 @@
 		var text;
 		var g;
 		var ball;
-		var maxi = 12, maxj = 12, maxk = 12;
+		var maxi = 12, maxj = 12, maxk = 11;
 
 		var period = 1500; //milliseconds for 1 movement.
 
@@ -89,6 +89,9 @@
 		var starty = -ySpace*(maxj-n)/2;
 		var endx = xLength + startx;
 		var endy = yLength + starty;
+
+		var transparencyNum = 2;
+		var transparencyStart = (maxk - transparencyNum)*zSpace;
 
 		function Dot(xi, yi, zi, state, directionx, directiony, directionz) {
 
@@ -123,9 +126,12 @@
 
 			this.currentState = state;
 
-			this.update = function(time) {
+			this.update = function(time, position) {
 
 				if (time - this.lastTime > period) {
+					this.currentState ++;
+					this.currentState = this.currentState % 3;
+
 					this.x = this.xf;
 					this.y = this.yf;
 					this.z = this.zf;
@@ -144,47 +150,49 @@
 						this.zf = this.zi + zSpace* directionz;
 					}
 
-					this.currentState ++;
-					this.currentState = this.currentState % 3;
 				}
 
-				delta = time %period;
-				delta = delta / period;
-				this.x = this.xi + (this.xf - this.xi)*distance(delta);
-				this.y = this.yi + (this.yf - this.yi)*distance(delta);
-				this.z = this.zi + (this.zf - this.zi)*distance(delta);
 
-				//Check if it is within visible range
-				if (this.z >= maxVisionDepth) {
-					this.z -= maxVisionDepth;
-					this.zi -= maxVisionDepth;
-					this.zf -= maxVisionDepth;
-				} else if (this.z < 0) {
-					this.z += maxVisionDepth;
-					this.zi += maxVisionDepth;
-					this.zf += maxVisionDepth;	
-				}
-				
-				if (this.y >= maxYdistance/2) {
-					this.y -= maxYdistance;
-					this.yi -= maxYdistance;
-					this.yf -= maxYdistance;
-				} else if (this.y < -maxYdistance/2) {
-					this.y += maxYdistance;
-					this.yi += maxYdistance;
-					this.yf += maxYdistance;
-				}
 
-				if (this.x >= maxXdistance/2) {
-					this.x -= maxXdistance;
-					this.xi -= maxXdistance;
-					this.xf -= maxXdistance;
-				} else if (this.x < -maxXdistance/2) {
-					this.x += maxXdistance;
-					this.xi += maxXdistance;
-					this.xf += maxXdistance;
-				}
 
+				if (this.currentState == 0) {
+					//Next modify the x coord
+					this.x = this.xi + (this.xf - this.xi)*position;
+
+					if (this.x >= maxXdistance/2) {
+						this.x -= maxXdistance;
+						this.xi -= maxXdistance;
+						this.xf -= maxXdistance;
+					} else if (this.x < -maxXdistance/2) {
+						this.x += maxXdistance;
+						this.xi += maxXdistance;
+						this.xf += maxXdistance;
+					}
+				} else if (this.currentState == 1) {
+					this.y = this.yi + (this.yf - this.yi)*position;
+					
+					if (this.y >= maxYdistance/2) {
+						this.y -= maxYdistance;
+						this.yi -= maxYdistance;
+						this.yf -= maxYdistance;
+					} else if (this.y < -maxYdistance/2) {
+						this.y += maxYdistance;
+						this.yi += maxYdistance;
+						this.yf += maxYdistance;
+					}
+				} else if (this.currentState == 2) {
+					this.z = this.zi + (this.zf - this.zi)*position;
+					//Check if it is within visible range
+					if (this.z >= maxVisionDepth) {
+						this.z -= maxVisionDepth;
+						this.zi -= maxVisionDepth;
+						this.zf -= maxVisionDepth;
+					} else if (this.z < 0) {
+						this.z += maxVisionDepth;
+						this.zi += maxVisionDepth;
+						this.zf += maxVisionDepth;	
+					}
+				}
 			}
 		}
 
@@ -193,7 +201,7 @@
 		var camera = new Dot(500, 500, -5);
 
 		function Setup() {
-			c.style.backgroundColor = "#EEE";
+			c.style.backgroundColor = "#f5f5f5";
 
 			stage = new createjs.Stage("homeCanvas");
 
@@ -239,12 +247,15 @@
 			*/
 
 			time = createjs.Ticker.getTime();
+			delta = time %period;
+			delta = delta / period;
 			for (var i = 0; i < maxi; i++) {
 				for (var j = 0; j < maxj; j++) {
 					for (var k = 0; k < maxk; k++) {
 						//Update
 						curDot = dots[k + j*maxk + i*maxj*maxk];
-						curDot.update(time);
+
+						curDot.update(time, distance(delta));
 
 					}
 				}
@@ -263,12 +274,16 @@
 							(curDot.x - camera.x) * -camera.z/curDot.z + camera.x,
 							(curDot.y - camera.y) * -camera.z/curDot.z + camera.y,
 							 /*45 * Math.min(1, (-camera.z/curDot.z)*(distance/curDot.z)),*/
-							 23 * 	(Math.abs(-camera.z/curDot.z)),
+							 23 * 	(Math.abs(-camera.z/(curDot.z))),
 							 0,
 							 2*Math.PI);
-						ctx.fillStyle = 'black';
+						if (curDot.z > transparencyStart) {
+							ctx.fillStyle = "rgba(0,0,0," + (1 - ((curDot.z - transparencyStart)*1.0 / (zSpace)*transparencyNum)  )+ ")"
+						} else {
+							ctx.fillStyle = 'black';	
+						}
       			ctx.fill();
-						ctx.stroke();
+						//ctx.stroke();
 					}
 				}
 			}
