@@ -2,7 +2,7 @@
 ##### Nicholas Mio 
 ##### November 16, 2016  
 
-This is a mini project that was inspired by a .gif that can be found at the link [here.](http://images.8tracks.com/imgix/i/002/376/989/tumblr_n73jvj0xqb1s0cmmno1_500-7375.gif?rect=0,0,500,500&q=65&fit=max&w=320&h=320)
+This is a mini project that was inspired by a .gif that can be found at the link [here.](https://github.com/mionick/Dot3D/blob/master/original.gif?raw=true)
 There's also an html element that points to this but is not displayed by default.
 
 I do not know the source of the original, I found it a couple years ago and have had it saved on my hard drive ever since. 
@@ -14,4 +14,4 @@ I used Easel.js because I wanted a framework to take care of timing the animatio
 
 I tried to make the code as general as possible throughout development so that changing small things like the nummber of dots or the speed was just a parameter change instead of rewriting a block of code. 
 
-![The original .gif](http://images.8tracks.com/imgix/i/002/376/989/tumblr_n73jvj0xqb1s0cmmno1_500-7375.gif?rect=0,0,500,500&q=65&fit=max&w=320&h=320)
+![The original .gif](https://github.com/mionick/Dot3D/blob/master/original.gif?raw=true)
