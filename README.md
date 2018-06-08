@@ -15,5 +15,6 @@ I used Easel.js because I wanted a framework to take care of timing the animatio
 I tried to make the code as general as possible throughout development so that changing small things like the number of dots or the speed was just a parameter change instead of rewriting a block of code. This actually proved to be really difficult, because the dots would become out of sync or the pattern would break in certain situations.
 
 ![The original .gif](https://github.com/mionick/Dot3D/blob/master/original.gif?raw=true)
+
 Link to Mine:
 http://htmlpreview.github.io/?https://github.com/mionick/Dot3D/blob/master/canvasPractice.html 
