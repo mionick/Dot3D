@@ -8,10 +8,10 @@
 
 			I do not know the source of the original, I found it a couple years ago and have had it saved on my hard drive ever since. 
 
-			I DO NOT take credit fo the original image or concept. All I've done is re implemented it using javascript and canvas. No infringment intended and I will gladly credit the original author should they ever become apparent. 
+			I DO NOT take credit of the original image or concept. All I've done is reimplement it using javascript and canvas. No infringment intended and I will gladly credit the original author should they ever become apparent. 
 
 		 	I saw it and wanted to make my own version so that I could use it as a background for an udpdated portfolio website.
-		  I used Easel.js because I wanted a framework to take care of timing the animation loop for me, but the actual rendering is done with pure js/canvas. 
+		  	I used Easel.js because I wanted a framework to take care of timing the animation loop for me, but the actual rendering is done with pure js/canvas. 
 
 			I tried to make the code as general as possible throughout development so that changing small things like the nummber of dots or the speed was just a parameter change instead of rewriting a block of code. 
 
@@ -68,9 +68,10 @@
 			/*
 			Will take a t |  0 < t < 1 and return a percent representing how far along the dot should be.
 
-			My previous attempts used velocity, but I found that the dots became out of synch rapidly. I thought this was liely due to rapidly accruing rounding errors, and it was going to cause problems when I tried to vary the speed anyways, so I changed my tactic.
+			My previous attempts used velocity, but I found that the dots rapidly became out of sync. 
+			I thought this was likely due to rapidly accruing rounding errors, and it was going to cause problems when I tried to vary the speed anyways, so I changed my tactic.
 
-			Now the positions of the dots are set accordign to this function. 
+			Now the positions of the dots are set according to this function. 
 
 			The only guarantee this function has to make is that:
 			distance(0) = 0;
@@ -79,7 +80,7 @@
 			0 < distance(t) < 1 for all 0 < t < 1;
 
 			This allows us to vary the "Speed" at which the dots approach the end points.
-			I've used a cosine here so the the fasted speed happens when the dot is in the centre of it's initial and final position.
+			I've used a cosine here so the the fastest speed happens when the dot is in the centre of it's initial and final position.
 
 			Was also considering using t^2 or another polynomial, but this is the smoothest approach. 
 
@@ -95,13 +96,13 @@
 		//an array of points in space. 
 		var dots = [];
 		var stage; //easel.js variable wrapping around the canvas.
-		var text; //framerate.
+		var text; //displayed framerate.
 		var g; //graphics
 		var maxi = 12, maxj = 12, maxk = 12; //number of dots in each direction, x, y, z.
 
 		var period = 1200; // number of milliseconds for 1 movement.
 
-		var n = 2.0; //number of dots to fit on the screen at once (in the forntmost x-y plane)
+		var n = 2.0; //number of dots to fit on the screen at once (in the frontmost x-y plane)
 		var canvasWidth = 1000; 
 		var canvasHeight = 1000;
 		var xSpace = canvasWidth / (n-1); //Space between dots in the x dimenstion
@@ -238,7 +239,8 @@
 		}
 
 
-		//The camera is the observer.
+		//The camera is the observer. It can be placed anywhere really, but I'm puttign it at 500 500 because our canvas is 1000*1000.
+		//-5 puts it slightl in front of the dots instead of in the same plane as them. Again, chosen because it makes the animation look "right".
 		var camera = new Dot(500, 500, -5);
 
 		//Initial setup is run once once the body has loaded.
@@ -262,7 +264,7 @@
 			
 			stage.addChild(text);
 
-			//Easel.js has several timing modes, this one defaults to tryign to use requestAnimationFrame() and will fallback to using setInterval() or setTimeout().
+			//Easel.js has several timing modes, this one defaults to trying to use requestAnimationFrame() and will fallback to using setInterval() or setTimeout().
 			createjs.Ticker.timingMode = createjs.Ticker.RAF;
 			createjs.Ticker.addEventListener("tick", Animate);
 		}
@@ -299,7 +301,7 @@
 
 			//Render
 			/*
-			Dots are rendered with basic though sightly wrong 3d math.
+			Dots are rendered with basic though sightly wrong 3d math. (wrong in the sense that it's an approximation)
 			Farther dots have a smaller radius, and eventually become transparent.
 			The dots are put into perspective here as well.
 			*/
